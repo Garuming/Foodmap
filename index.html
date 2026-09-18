@@ -526,6 +526,9 @@
   const catMap = Object.fromEntries(CATS.map(c => [c.key, c]));
 
   let db = null;
+  let dataMode = 'local'; // 'cloud'(Claude 아티팩트 db) 또는 'local'(브라우저 localStorage)
+  let localPlaces = [];
+  const LOCAL_STORAGE_KEY = 'gwalgwali_matjip_places_v1';
   let places = [];
   let unsub = null;
   let editId = null;
@@ -639,19 +642,66 @@
     return div.innerHTML;
   }
 
+  // ---------- 데이터 저장 계층 ----------
+  // Claude 아티팩트 미리보기 안에서는 db(클라우드, 공유) 저장을 쓰고,
+  // GitHub Pages 등 실제로 배포된 환경(window.claude가 없는 곳)에서는
+  // 브라우저 localStorage에 저장해서 새로고침해도 데이터가 남도록 함.
+  function loadLocalPlaces(){
+    try {
+      const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch (e) { return []; }
+  }
+  function saveLocalPlaces(){
+    try { localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(localPlaces)); } catch (e) {}
+  }
+  function renderFromLocal(){
+    places = localPlaces.slice().sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    renderStats();
+    renderGrid();
+  }
+  async function addPlace(data){
+    if (dataMode === 'cloud' && db) {
+      await db.collection('places').add(data);
+    } else {
+      const id = 'local_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+      localPlaces.push({ id, ...data });
+      saveLocalPlaces();
+      renderFromLocal();
+    }
+  }
+  async function updatePlaceStatus(id, status){
+    if (dataMode === 'cloud' && db) {
+      await db.collection('places').doc(id).update({ status });
+    } else {
+      localPlaces = localPlaces.map(p => p.id === id ? { ...p, status } : p);
+      saveLocalPlaces();
+      renderFromLocal();
+    }
+  }
+  async function deletePlaceById(id){
+    if (dataMode === 'cloud' && db) {
+      await db.collection('places').doc(id).delete();
+    } else {
+      localPlaces = localPlaces.filter(p => p.id !== id);
+      saveLocalPlaces();
+      renderFromLocal();
+    }
+  }
+
   grid.addEventListener('click', (e) => {
     const btn = e.target.closest('button[data-action]');
     if (!btn) return;
     const id = btn.getAttribute('data-id');
     const action = btn.getAttribute('data-action');
     const place = places.find(p => p.id === id);
-    if (!place || !db) return;
+    if (!place) return;
     if (action === 'toggle') {
       const newStatus = place.status === 'done' ? 'want' : 'done';
-      db.collection('places').doc(id).update({ status: newStatus }).catch(()=>{ showToast('상태 변경에 실패했어요'); });
+      updatePlaceStatus(id, newStatus).catch(() => showToast('상태 변경에 실패했어요'));
     } else if (action === 'delete') {
       if (confirm(`"${place.name}"을(를) 삭제할까요?`)) {
-        db.collection('places').doc(id).delete().catch(()=>{ showToast('삭제에 실패했어요'); });
+        deletePlaceById(id).catch(() => showToast('삭제에 실패했어요'));
       }
     }
   });
@@ -705,7 +755,6 @@
   $('btnSave').onclick = async () => {
     const name = $('fName').value.trim();
     if (!name) { showToast('가게 이름을 입력해주세요'); return; }
-    if (!db) { showToast('저장 기능을 사용할 수 없어요'); return; }
     const data = {
       name,
       address: $('fAddr').value.trim(),
@@ -715,7 +764,7 @@
       createdAt: Date.now(),
     };
     try {
-      await db.collection('places').add(data);
+      await addPlace(data);
       showToast('맛집을 저장했어요! 🎉');
       closeModal();
     } catch (err) {
@@ -746,26 +795,37 @@
   }
 
   async function connectDb(){
-    const bridge = await waitForClaudeBridge();
-    if (!bridge) { offlineBanner.style.display = 'block'; return; }
-    try {
-      db = await bridge.use('db');
-    } catch (e) {
-      db = null;
+    const bridge = await waitForClaudeBridge(3000, 150);
+    if (bridge) {
+      try {
+        db = await bridge.use('db');
+      } catch (e) {
+        db = null;
+      }
     }
-    if (!db) {
-      offlineBanner.style.display = 'block';
-      return;
+    if (db) {
+      // Claude 아티팩트 미리보기 안: 여러 사람이 함께 보는 공유 클라우드 저장 사용
+      dataMode = 'cloud';
+      offlineBanner.style.display = 'none';
+      unsub = db.collection('places').orderBy('createdAt', 'desc').onSnapshot((snap) => {
+        places = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        renderStats();
+        renderGrid();
+      }, (err) => {
+        // 실시간 연결이 끊겨도 로컬 저장으로 전환해 계속 쓸 수 있게 함
+        dataMode = 'local';
+        localPlaces = loadLocalPlaces();
+        renderFromLocal();
+      });
+    } else {
+      // GitHub Pages 등 실제 배포 환경: 브라우저별 localStorage 저장 사용
+      dataMode = 'local';
+      localPlaces = loadLocalPlaces();
+      offlineBanner.style.display = 'none';
+      renderFromLocal();
     }
-    offlineBanner.style.display = 'none';
-    unsub = db.collection('places').orderBy('createdAt', 'desc').onSnapshot((snap) => {
-      places = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      renderStats();
-      renderGrid();
-    }, (err) => {
-      offlineBanner.style.display = 'block';
-    });
   }
+
 
   // ---------- 네이버 지도(NAVER Maps JavaScript API v3) ----------
   // 아래 설정값만 바꾸면 지도 중심 좌표 / 확대 레벨 / 마커를 손쉽게 조정할 수 있음.
