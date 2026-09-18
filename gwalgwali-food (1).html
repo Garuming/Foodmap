@@ -1,0 +1,936 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+<title>괄괄이의 가즈아! 맛집</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #FFF8EF;
+    --cream-card: #FFFFFF;
+    --coral: #FF6F61;
+    --coral-dark: #E85A4D;
+    --mango: #FFC145;
+    --mango-dark: #F2A61A;
+    --mint: #06B893;
+    --mint-soft: #E1FBF3;
+    --sky: #3FA7D6;
+    --sky-soft: #E3F4FB;
+    --grape: #8E5DD9;
+    --ink: #3A3238;
+    --ink-soft: #8A7F86;
+    --line: #F0E3D6;
+    --shadow: 6px 6px 0 rgba(58,50,56,0.08);
+    --radius: 20px;
+    color-scheme: light;
+  }
+  :root:not([data-theme="light"]) {
+    @media (prefers-color-scheme: dark) {
+      --cream: #241C22;
+      --cream-card: #2F2530;
+      --ink: #F5ECE4;
+      --ink-soft: #C9B8BF;
+      --line: #453740;
+      --shadow: 6px 6px 0 rgba(0,0,0,0.35);
+      --mint-soft: #14332C;
+      --sky-soft: #12303C;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --cream: #241C22;
+    --cream-card: #2F2530;
+    --ink: #F5ECE4;
+    --ink-soft: #C9B8BF;
+    --line: #453740;
+    --shadow: 6px 6px 0 rgba(0,0,0,0.35);
+    --mint-soft: #14332C;
+    --sky-soft: #12303C;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--cream);
+    color: var(--ink);
+    font-family: 'Noto Sans KR', sans-serif;
+    min-height: 100vh;
+    padding-bottom: 100px;
+  }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 28px 18px 40px; }
+
+  /* ---------- Header ---------- */
+  header {
+    text-align: center;
+    padding: 8px 0 22px;
+  }
+  .mascot { font-size: 46px; display: inline-block; transform: rotate(-6deg); }
+  h1 {
+    font-family: 'Jua', sans-serif;
+    font-size: clamp(28px, 6vw, 38px);
+    margin: 6px 0 4px;
+    color: var(--coral-dark);
+    letter-spacing: -0.5px;
+  }
+  h1 .go { color: var(--grape); }
+  .subtitle { color: var(--ink-soft); font-size: 14.5px; margin: 0; }
+
+  /* ---------- Stats strip ---------- */
+  .stats {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin: 18px 0 6px;
+    flex-wrap: wrap;
+  }
+  .stat-chip {
+    background: var(--cream-card);
+    border: 2px solid var(--line);
+    border-radius: 999px;
+    padding: 6px 14px;
+    font-size: 13px;
+    font-weight: 700;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .stat-chip b { font-family: 'Jua', sans-serif; font-size: 15px; }
+
+  /* ---------- Controls ---------- */
+  .controls {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: var(--cream);
+    padding: 14px 0 10px;
+  }
+  .search-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--cream-card);
+    border: 2px solid var(--line);
+    border-radius: 999px;
+    padding: 10px 16px;
+    margin-bottom: 10px;
+  }
+  .search-box input {
+    border: none; outline: none; background: transparent;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 14.5px; color: var(--ink); flex: 1;
+  }
+  .search-box input::placeholder { color: var(--ink-soft); }
+
+  .filter-row {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+  }
+  .filter-row::-webkit-scrollbar { display: none; }
+  .chip {
+    flex: none;
+    border: 2px solid var(--line);
+    background: var(--cream-card);
+    color: var(--ink);
+    padding: 7px 14px;
+    border-radius: 999px;
+    font-size: 13.5px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: transform .12s ease;
+  }
+  .chip:hover { transform: translateY(-1px); }
+  .chip.active {
+    background: var(--coral);
+    border-color: var(--coral);
+    color: #fff;
+    font-weight: 700;
+  }
+
+  /* ---------- Card grid ---------- */
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+    margin-top: 16px;
+  }
+  @media (min-width: 560px) {
+    .grid { grid-template-columns: 1fr 1fr; }
+  }
+
+  .card {
+    background: var(--cream-card);
+    border: 2.5px solid var(--ink);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 16px 16px 14px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    transition: transform .15s ease;
+  }
+  .card:hover { transform: translate(-2px,-2px); }
+
+  .card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+  .cat-badge {
+    font-size: 12.5px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--ink);
+  }
+  .card-name {
+    font-family: 'Jua', sans-serif;
+    font-size: 19px;
+    margin: 0;
+    line-height: 1.3;
+    word-break: keep-all;
+  }
+  .card-memo {
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+    word-break: keep-all;
+    white-space: pre-wrap;
+  }
+  .card-addr {
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .status-pill {
+    font-size: 12px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    flex: none;
+  }
+  .status-want { background: var(--sky-soft); color: var(--sky); }
+  .status-done { background: var(--mint-soft); color: var(--mint); }
+
+  .card-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+  }
+  .action-btn {
+    flex: 1;
+    border: 2px solid var(--ink);
+    background: #fff;
+    color: var(--ink);
+    font-family: 'Noto Sans KR', sans-serif;
+    font-weight: 700;
+    font-size: 12.5px;
+    padding: 8px 6px;
+    border-radius: 12px;
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+  }
+  .action-btn.map { background: var(--mango); border-color: var(--mango-dark); color: #4A3200; }
+  .action-btn.del { flex: none; width: 38px; background: #fff; color: var(--coral-dark); border-color: var(--coral); }
+  :root[data-theme="dark"] .action-btn, .card { color: var(--ink); }
+
+  .empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--ink-soft);
+  }
+  .empty .big { font-size: 44px; display: block; margin-bottom: 10px; }
+  .empty p { font-size: 14.5px; margin: 4px 0; }
+
+  /* ---------- FAB ---------- */
+  .fab {
+    position: fixed;
+    right: 20px;
+    bottom: 24px;
+    width: 60px; height: 60px;
+    border-radius: 50%;
+    background: var(--coral);
+    border: 3px solid var(--ink);
+    color: #fff;
+    font-size: 28px;
+    box-shadow: 5px 5px 0 rgba(58,50,56,0.2);
+    cursor: pointer;
+    z-index: 20;
+    display: flex; align-items: center; justify-content: center;
+    transition: transform .15s ease;
+  }
+  .fab:hover { transform: scale(1.06) rotate(8deg); }
+
+  /* ---------- Modal ---------- */
+  .overlay {
+    position: fixed; inset: 0;
+    background: rgba(58,50,56,0.45);
+    display: none;
+    align-items: flex-end;
+    justify-content: center;
+    z-index: 30;
+  }
+  .overlay.open { display: flex; }
+  @media (min-width: 560px) {
+    .overlay { align-items: center; }
+  }
+  .modal {
+    background: var(--cream-card);
+    width: 100%;
+    max-width: 460px;
+    border-radius: 24px 24px 0 0;
+    padding: 22px 20px 26px;
+    max-height: 88vh;
+    overflow-y: auto;
+    border-top: 3px solid var(--ink);
+  }
+  @media (min-width: 560px) {
+    .modal { border-radius: 24px; border: 3px solid var(--ink); }
+  }
+  .modal h2 {
+    font-family: 'Jua', sans-serif;
+    font-size: 22px;
+    margin: 0 0 16px;
+    color: var(--coral-dark);
+  }
+  .field { margin-bottom: 14px; }
+  .field label {
+    display: block;
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    color: var(--ink);
+  }
+  .field input, .field textarea {
+    width: 100%;
+    border: 2px solid var(--line);
+    border-radius: 12px;
+    padding: 10px 12px;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 14px;
+    color: var(--ink);
+    background: var(--cream);
+    outline: none;
+  }
+  .field input:focus, .field textarea:focus { border-color: var(--coral); }
+  .field textarea { resize: vertical; min-height: 60px; }
+
+  .pill-select { display: flex; gap: 6px; flex-wrap: wrap; }
+  .pill-opt {
+    border: 2px solid var(--line);
+    background: var(--cream);
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 13px;
+    cursor: pointer;
+    font-weight: 500;
+  }
+  .pill-opt.sel { border-color: var(--ink); background: var(--mango); font-weight: 700; }
+
+  .modal-actions { display: flex; gap: 10px; margin-top: 18px; }
+  .btn {
+    flex: 1;
+    border: 2px solid var(--ink);
+    border-radius: 14px;
+    padding: 12px;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-weight: 700;
+    font-size: 14.5px;
+    cursor: pointer;
+  }
+  .btn.cancel { background: var(--cream-card); color: var(--ink-soft); }
+  .btn.save { background: var(--coral); color: #fff; border-color: var(--coral-dark); }
+
+  .toast {
+    position: fixed;
+    bottom: 96px;
+    left: 50%;
+    transform: translateX(-50%) translateY(10px);
+    background: var(--ink);
+    color: var(--cream);
+    padding: 10px 18px;
+    border-radius: 999px;
+    font-size: 13.5px;
+    font-weight: 500;
+    opacity: 0;
+    pointer-events: none;
+    transition: all .25s ease;
+    z-index: 40;
+    white-space: nowrap;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  .offline-banner {
+    background: var(--sky-soft);
+    color: var(--sky);
+    border-radius: 14px;
+    padding: 10px 14px;
+    font-size: 13px;
+    text-align: center;
+    margin-bottom: 14px;
+    display: none;
+  }
+
+  /* ---------- 네이버 지도 섹션 ---------- */
+  .map-section {
+    margin: 4px 0 18px;
+  }
+  .map-section-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .map-section-header h2 {
+    font-family: 'Jua', sans-serif;
+    font-size: 17px;
+    margin: 0;
+    color: var(--grape);
+  }
+  .map-section-header span {
+    font-size: 11.5px;
+    color: var(--ink-soft);
+  }
+  .naver-map-box {
+    position: relative;
+    width: 100%;
+    height: 260px;
+    border-radius: var(--radius);
+    border: 2.5px solid var(--ink);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    background: var(--sky-soft);
+  }
+  .naver-map-notice {
+    position: absolute;
+    inset: 0;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 6px;
+    padding: 20px;
+    background: var(--sky-soft);
+    color: var(--ink);
+  }
+  .naver-map-notice .icon { font-size: 30px; }
+  .naver-map-notice b { font-size: 14px; }
+  .naver-map-notice p { margin: 0; font-size: 12.5px; color: var(--ink-soft); line-height: 1.5; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="mascot">🐯</span>
+    <h1>괄괄이의 <span class="go">가즈아!</span> 맛집</h1>
+    <p class="subtitle">가고 싶은 맛집을 모아두고, 다녀오면 도장 쾅!</p>
+  </header>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="offline-banner" id="offlineBanner">저장 기능을 불러오는 중이거나 사용할 수 없어요. 새로고침 해보세요 🙏</div>
+
+  <div class="map-section">
+    <div class="map-section-header">
+      <h2>📍 맛집 지도</h2>
+      <span>NAVER Maps API v3</span>
+    </div>
+    <div id="naverMapEl" class="naver-map-box">
+      <div id="naverMapNotice" class="naver-map-notice"></div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="search-box">
+      <span>🔍</span>
+      <input id="searchInput" type="text" placeholder="맛집 이름으로 찾아보기" />
+    </div>
+    <div class="filter-row" id="filterRow"></div>
+  </div>
+
+  <div class="grid" id="grid"></div>
+  <div class="empty" id="emptyState" style="display:none;">
+    <span class="big">🍜</span>
+    <p><b>아직 저장한 맛집이 없어요!</b></p>
+    <p>오른쪽 아래 + 버튼으로 첫 맛집을 추가해볼까요?</p>
+  </div>
+</div>
+
+<button class="fab" id="fabAdd" aria-label="맛집 추가">＋</button>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h2 id="modalTitle">새 맛집 추가하기</h2>
+    <div class="field">
+      <label>가게 이름</label>
+      <input id="fName" type="text" placeholder="예: 괄괄이네 김치찌개" />
+    </div>
+    <div class="field">
+      <label>카테고리</label>
+      <div class="pill-select" id="catSelect"></div>
+    </div>
+    <div class="field">
+      <label>주소 / 위치 (선택)</label>
+      <input id="fAddr" type="text" placeholder="예: 인천 연수구 OO로 12" />
+    </div>
+    <div class="field">
+      <label>메모 (선택)</label>
+      <textarea id="fMemo" placeholder="추천 메뉴, 왜 가고 싶은지 등을 적어보세요"></textarea>
+    </div>
+    <div class="field">
+      <label>상태</label>
+      <div class="pill-select" id="statusSelect">
+        <div class="pill-opt sel" data-val="want">🙋 가고싶어요</div>
+        <div class="pill-opt" data-val="done">✅ 다녀왔어요</div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn cancel" id="btnCancel">취소</button>
+      <button class="btn save" id="btnSave">저장하기</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  const CATS = [
+    { key: 'korean', label: '한식', emoji: '🍚', color: '#FFE1D6' },
+    { key: 'japanese', label: '일식', emoji: '🍣', color: '#DCEFFB' },
+    { key: 'chinese', label: '중식', emoji: '🥢', color: '#FFE7B8' },
+    { key: 'western', label: '양식', emoji: '🍝', color: '#F1E1FA' },
+    { key: 'cafe', label: '카페·디저트', emoji: '☕', color: '#F6E6D8' },
+    { key: 'bar', label: '술집', emoji: '🍻', color: '#FFF0B8' },
+    { key: 'snack', label: '분식', emoji: '🍢', color: '#FFD9E0' },
+    { key: 'etc', label: '기타', emoji: '🍽️', color: '#E3F7EE' },
+  ];
+  const catMap = Object.fromEntries(CATS.map(c => [c.key, c]));
+
+  let db = null;
+  let dataMode = 'local'; // 'cloud'(Claude 아티팩트 db) 또는 'local'(브라우저 localStorage)
+  let localPlaces = [];
+  const LOCAL_STORAGE_KEY = 'gwalgwali_matjip_places_v1';
+  let places = [];
+  let unsub = null;
+  let editId = null;
+  let activeFilter = 'all';
+  let activeCat = 'all';
+  let searchTerm = '';
+  let selectedCatKey = CATS[0].key;
+  let selectedStatus = 'want';
+
+  const $ = (id) => document.getElementById(id);
+  const grid = $('grid');
+  const emptyState = $('emptyState');
+  const statsEl = $('stats');
+  const filterRow = $('filterRow');
+  const toastEl = $('toast');
+  const offlineBanner = $('offlineBanner');
+
+  function showToast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    setTimeout(()=> toastEl.classList.remove('show'), 1800);
+  }
+
+  function naverMapUrl(place){
+    const q = encodeURIComponent(place.address ? (place.name + ' ' + place.address) : place.name);
+    return 'https://map.naver.com/p/search/' + q;
+  }
+
+  function renderFilters(){
+    const statusFilters = [
+      { key: 'all', label: '전체' },
+      { key: 'want', label: '🙋 가고싶어요' },
+      { key: 'done', label: '✅ 다녀왔어요' },
+    ];
+    filterRow.innerHTML = '';
+    statusFilters.forEach(f => {
+      const b = document.createElement('button');
+      b.className = 'chip' + (activeFilter === f.key ? ' active' : '');
+      b.textContent = f.label;
+      b.onclick = () => { activeFilter = f.key; renderFilters(); renderGrid(); };
+      filterRow.appendChild(b);
+    });
+    const allCatChip = document.createElement('button');
+    allCatChip.className = 'chip' + (activeCat === 'all' ? ' active' : '');
+    allCatChip.textContent = '카테고리 전체';
+    allCatChip.onclick = () => { activeCat = 'all'; renderFilters(); renderGrid(); };
+    filterRow.appendChild(allCatChip);
+    CATS.forEach(c => {
+      const b = document.createElement('button');
+      b.className = 'chip' + (activeCat === c.key ? ' active' : '');
+      b.textContent = c.emoji + ' ' + c.label;
+      b.onclick = () => { activeCat = c.key; renderFilters(); renderGrid(); };
+      filterRow.appendChild(b);
+    });
+  }
+
+  function renderStats(){
+    const total = places.length;
+    const want = places.filter(p => p.status === 'want').length;
+    const done = places.filter(p => p.status === 'done').length;
+    statsEl.innerHTML = `
+      <div class="stat-chip">📋 <b>${total}</b>곳 저장</div>
+      <div class="stat-chip">🙋 <b>${want}</b>곳 대기중</div>
+      <div class="stat-chip">✅ <b>${done}</b>곳 완료</div>
+    `;
+  }
+
+  function renderGrid(){
+    let list = places.slice();
+    if (activeFilter !== 'all') list = list.filter(p => p.status === activeFilter);
+    if (activeCat !== 'all') list = list.filter(p => p.category === activeCat);
+    if (searchTerm.trim()) {
+      const t = searchTerm.trim().toLowerCase();
+      list = list.filter(p => (p.name||'').toLowerCase().includes(t));
+    }
+    grid.innerHTML = '';
+    emptyState.style.display = list.length === 0 ? 'block' : 'none';
+    if (places.length === 0) {
+      emptyState.querySelector('p:nth-of-type(1)').innerHTML = '<b>아직 저장한 맛집이 없어요!</b>';
+    } else if (list.length === 0) {
+      emptyState.querySelector('.big').textContent = '🔎';
+      emptyState.querySelector('p:nth-of-type(1)').innerHTML = '<b>조건에 맞는 맛집이 없어요</b>';
+      emptyState.querySelector('p:nth-of-type(2)').textContent = '다른 필터나 검색어로 찾아보세요';
+    }
+    list.forEach(p => {
+      const cat = catMap[p.category] || catMap.etc;
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `
+        <div class="card-top">
+          <span class="cat-badge" style="background:${cat.color}">${cat.emoji} ${cat.label}</span>
+          <button class="status-pill ${p.status === 'done' ? 'status-done' : 'status-want'}" data-id="${p.id}" data-action="toggle">
+            ${p.status === 'done' ? '✅ 다녀옴' : '🙋 가고싶어요'}
+          </button>
+        </div>
+        <h3 class="card-name">${escapeHtml(p.name)}</h3>
+        ${p.address ? `<div class="card-addr">📍 ${escapeHtml(p.address)}</div>` : ''}
+        ${p.memo ? `<div class="card-memo">${escapeHtml(p.memo)}</div>` : ''}
+        <div class="card-actions">
+          <a class="action-btn map" href="${naverMapUrl(p)}" target="_blank" rel="noopener">🗺️ 네이버 지도</a>
+          <button class="action-btn del" data-id="${p.id}" data-action="delete">🗑️</button>
+        </div>
+      `;
+      grid.appendChild(card);
+    });
+  }
+
+  function escapeHtml(str){
+    const div = document.createElement('div');
+    div.textContent = str || '';
+    return div.innerHTML;
+  }
+
+  // ---------- 데이터 저장 계층 ----------
+  // Claude 아티팩트 미리보기 안에서는 db(클라우드, 공유) 저장을 쓰고,
+  // GitHub Pages 등 실제로 배포된 환경(window.claude가 없는 곳)에서는
+  // 브라우저 localStorage에 저장해서 새로고침해도 데이터가 남도록 함.
+  function loadLocalPlaces(){
+    try {
+      const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch (e) { return []; }
+  }
+  function saveLocalPlaces(){
+    try { localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(localPlaces)); } catch (e) {}
+  }
+  function renderFromLocal(){
+    places = localPlaces.slice().sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    renderStats();
+    renderGrid();
+  }
+  async function addPlace(data){
+    if (dataMode === 'cloud' && db) {
+      await db.collection('places').add(data);
+    } else {
+      const id = 'local_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+      localPlaces.push({ id, ...data });
+      saveLocalPlaces();
+      renderFromLocal();
+    }
+  }
+  async function updatePlaceStatus(id, status){
+    if (dataMode === 'cloud' && db) {
+      await db.collection('places').doc(id).update({ status });
+    } else {
+      localPlaces = localPlaces.map(p => p.id === id ? { ...p, status } : p);
+      saveLocalPlaces();
+      renderFromLocal();
+    }
+  }
+  async function deletePlaceById(id){
+    if (dataMode === 'cloud' && db) {
+      await db.collection('places').doc(id).delete();
+    } else {
+      localPlaces = localPlaces.filter(p => p.id !== id);
+      saveLocalPlaces();
+      renderFromLocal();
+    }
+  }
+
+  grid.addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-action]');
+    if (!btn) return;
+    const id = btn.getAttribute('data-id');
+    const action = btn.getAttribute('data-action');
+    const place = places.find(p => p.id === id);
+    if (!place) return;
+    if (action === 'toggle') {
+      const newStatus = place.status === 'done' ? 'want' : 'done';
+      updatePlaceStatus(id, newStatus).catch(() => showToast('상태 변경에 실패했어요'));
+    } else if (action === 'delete') {
+      if (confirm(`"${place.name}"을(를) 삭제할까요?`)) {
+        deletePlaceById(id).catch(() => showToast('삭제에 실패했어요'));
+      }
+    }
+  });
+
+  $('searchInput').addEventListener('input', (e) => {
+    searchTerm = e.target.value;
+    renderGrid();
+  });
+
+  // ---------- Modal ----------
+  const overlay = $('overlay');
+  const catSelect = $('catSelect');
+  CATS.forEach(c => {
+    const el = document.createElement('div');
+    el.className = 'pill-opt' + (c.key === selectedCatKey ? ' sel' : '');
+    el.textContent = c.emoji + ' ' + c.label;
+    el.dataset.key = c.key;
+    el.onclick = () => {
+      selectedCatKey = c.key;
+      [...catSelect.children].forEach(ch => ch.classList.toggle('sel', ch.dataset.key === c.key));
+    };
+    catSelect.appendChild(el);
+  });
+
+  const statusSelect = $('statusSelect');
+  [...statusSelect.children].forEach(el => {
+    el.onclick = () => {
+      selectedStatus = el.dataset.val;
+      [...statusSelect.children].forEach(ch => ch.classList.toggle('sel', ch === el));
+    };
+  });
+
+  function openModal(){
+    editId = null;
+    $('modalTitle').textContent = '새 맛집 추가하기';
+    $('fName').value = '';
+    $('fAddr').value = '';
+    $('fMemo').value = '';
+    selectedCatKey = CATS[0].key;
+    selectedStatus = 'want';
+    [...catSelect.children].forEach(ch => ch.classList.toggle('sel', ch.dataset.key === selectedCatKey));
+    [...statusSelect.children].forEach(ch => ch.classList.toggle('sel', ch.dataset.val === selectedStatus));
+    overlay.classList.add('open');
+  }
+  function closeModal(){ overlay.classList.remove('open'); }
+
+  $('fabAdd').onclick = openModal;
+  $('btnCancel').onclick = closeModal;
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) closeModal(); });
+
+  $('btnSave').onclick = async () => {
+    const name = $('fName').value.trim();
+    if (!name) { showToast('가게 이름을 입력해주세요'); return; }
+    const data = {
+      name,
+      address: $('fAddr').value.trim(),
+      memo: $('fMemo').value.trim(),
+      category: selectedCatKey,
+      status: selectedStatus,
+      createdAt: Date.now(),
+    };
+    try {
+      await addPlace(data);
+      showToast('맛집을 저장했어요! 🎉');
+      closeModal();
+    } catch (err) {
+      showToast('저장에 실패했어요');
+    }
+  };
+
+  // window.claude(플랫폼 브릿지)는 페이지 스크립트가 실행되는 시점보다
+  // "나중에", DOMContentLoaded와도 순서 상관없이 주입될 수 있음.
+  // 그래서 로드 직후 바로 claude.use()를 호출하면 아직 준비되지 않아
+  // 실패(→ 데이터 0건 → 검색해도 아무것도 안 나옴)로 보일 수 있어서,
+  // 준비될 때까지 짧게 재시도(폴링)한 뒤에 db를 불러온다.
+  function waitForClaudeBridge(timeoutMs, intervalMs){
+    timeoutMs = timeoutMs || 8000;
+    intervalMs = intervalMs || 150;
+    return new Promise((resolve) => {
+      const start = Date.now();
+      (function poll(){
+        if (typeof window.claude !== 'undefined' && typeof window.claude.use === 'function') {
+          resolve(window.claude);
+        } else if (Date.now() - start > timeoutMs) {
+          resolve(null);
+        } else {
+          setTimeout(poll, intervalMs);
+        }
+      })();
+    });
+  }
+
+  async function connectDb(){
+    const bridge = await waitForClaudeBridge(3000, 150);
+    if (bridge) {
+      try {
+        db = await bridge.use('db');
+      } catch (e) {
+        db = null;
+      }
+    }
+    if (db) {
+      // Claude 아티팩트 미리보기 안: 여러 사람이 함께 보는 공유 클라우드 저장 사용
+      dataMode = 'cloud';
+      offlineBanner.style.display = 'none';
+      unsub = db.collection('places').orderBy('createdAt', 'desc').onSnapshot((snap) => {
+        places = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        renderStats();
+        renderGrid();
+      }, (err) => {
+        // 실시간 연결이 끊겨도 로컬 저장으로 전환해 계속 쓸 수 있게 함
+        dataMode = 'local';
+        localPlaces = loadLocalPlaces();
+        renderFromLocal();
+      });
+    } else {
+      // GitHub Pages 등 실제 배포 환경: 브라우저별 localStorage 저장 사용
+      dataMode = 'local';
+      localPlaces = loadLocalPlaces();
+      offlineBanner.style.display = 'none';
+      renderFromLocal();
+    }
+  }
+
+
+  // ---------- 네이버 지도(NAVER Maps JavaScript API v3) ----------
+  // 아래 설정값만 바꾸면 지도 중심 좌표 / 확대 레벨 / 마커를 손쉽게 조정할 수 있음.
+  const NAVER_MAP_CONFIG = {
+    // 네이버 클라우드 플랫폼(NCP) 콘솔에서 발급받은 Client ID (ncpKeyId 방식)
+    clientId: 'atgw278oe3',
+    // 지도 중심 좌표 (기본값: 인천시청 부근) - 필요에 맞게 수정
+    center: { lat: 37.4563, lng: 126.7052 },
+    // 지도 확대 레벨 (숫자가 클수록 확대됨, 보통 6~21 범위)
+    zoom: 13,
+    // 지도에 표시할 마커 목록. { lat, lng, title } 형태로 자유롭게 추가/삭제 가능
+    markers: [
+      // 예시: { lat: 37.4563, lng: 126.7052, title: '괄괄이네 김치찌개' },
+    ],
+  };
+
+  let naverMapInstance = null;
+  const naverMarkers = [];
+
+  /** 지도에 마커 하나를 추가하는 함수. 나중에 저장된 맛집 좌표가 생기면
+   *  이 함수를 호출해서 그대로 마커를 늘릴 수 있는 구조. */
+  function addNaverMarker(lat, lng, title){
+    if (!naverMapInstance || !window.naver || !window.naver.maps) return null;
+    const marker = new naver.maps.Marker({
+      position: new naver.maps.LatLng(lat, lng),
+      map: naverMapInstance,
+      title: title || '',
+    });
+    naverMarkers.push(marker);
+    return marker;
+  }
+
+  function loadNaverMapScript(clientId){
+    return new Promise((resolve, reject) => {
+      if (window.naver && window.naver.maps) { resolve(); return; }
+      const script = document.createElement('script');
+      script.src = 'https://openapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=' + encodeURIComponent(clientId);
+      script.async = true;
+      script.onload = () => {
+        if (window.naver && window.naver.maps) resolve();
+        else reject(new Error('네이버 지도 스크립트가 로드됐지만 naver.maps 객체를 찾을 수 없어요.'));
+      };
+      script.onerror = () => reject(new Error('네이버 지도 스크립트를 불러오지 못했어요.'));
+      document.head.appendChild(script);
+      // 일정 시간 안에 로드되지 않으면 타임아웃 처리 (CSP 등으로 조용히 막히는 경우 대비)
+      setTimeout(() => {
+        if (!(window.naver && window.naver.maps)) {
+          reject(new Error('네이버 지도 스크립트 로드가 시간 내에 완료되지 않았어요.'));
+        }
+      }, 6000);
+    });
+  }
+
+  function showMapNotice(html){
+    const notice = document.getElementById('naverMapNotice');
+    notice.innerHTML = html;
+    notice.style.display = 'flex';
+  }
+
+  async function initNaverMap(){
+    const mapEl = document.getElementById('naverMapEl');
+    if (!NAVER_MAP_CONFIG.clientId || NAVER_MAP_CONFIG.clientId === 'YOUR_NCP_CLIENT_ID') {
+      showMapNotice(
+        '<span class="icon">🔑</span>' +
+        '<b>네이버 지도 Client ID가 필요해요</b>' +
+        '<p>코드 안의 <code>NAVER_MAP_CONFIG.clientId</code> 값을 ' +
+        '네이버 클라우드 플랫폼에서 발급받은 Client ID(ncpKeyId)로 바꿔주세요.</p>'
+      );
+      return;
+    }
+    try {
+      await loadNaverMapScript(NAVER_MAP_CONFIG.clientId);
+      naverMapInstance = new naver.maps.Map(mapEl, {
+        center: new naver.maps.LatLng(NAVER_MAP_CONFIG.center.lat, NAVER_MAP_CONFIG.center.lng),
+        zoom: NAVER_MAP_CONFIG.zoom,
+      });
+      NAVER_MAP_CONFIG.markers.forEach(m => addNaverMarker(m.lat, m.lng, m.title));
+      document.getElementById('naverMapNotice').style.display = 'none';
+    } catch (e) {
+      // claude.ai Artifact 미리보기 환경은 보안 정책(CSP)상 스크립트를
+      // cdnjs.cloudflare.com / cdn.jsdelivr.net / cdn.tailwindcss.com / code.jquery.com
+      // 네 곳에서만 불러올 수 있어서, openapi.map.naver.com 스크립트는 이 미리보기
+      // 안에서는 항상 막혀요(조용히 실패). 실제 웹 호스팅(직접 서버, Vercel, Netlify 등)에
+      // 이 HTML 파일을 그대로 올리면 같은 코드가 정상적으로 지도를 표시해요.
+      showMapNotice(
+        '<span class="icon">🗺️</span>' +
+        '<b>이 미리보기에서는 지도를 표시할 수 없어요</b>' +
+        '<p>Claude 미리보기(Artifact)는 보안 정책상 openapi.map.naver.com 스크립트를 ' +
+        '불러올 수 없어요. Client ID 설정과 코드는 정상이며, 이 HTML 파일을 실제 웹사이트에 ' +
+        '배포하면 그대로 지도가 나타나요.</p>'
+      );
+    }
+  }
+
+  // ---------- Init ----------
+  async function init(){
+    renderFilters();
+    renderStats();
+    renderGrid();
+    connectDb();
+    initNaverMap();
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
